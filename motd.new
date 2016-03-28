@@ -1,0 +1,39 @@
+#!/bin/bash
+
+let upSeconds="$(/usr/bin/cut -d. -f1 /proc/uptime)"
+let secs=$((${upSeconds}%60))
+let mins=$((${upSeconds}/60%60))
+let hours=$((${upSeconds}/3600%24))
+let days=$((${upSeconds}/86400))
+UPTIME=`printf "%02dd %02dh %02dm %02ds" "$days" "$hours" "$mins" "$secs"`
+
+# get the load averages
+read one five fifteen rest < /proc/loadavg
+
+echo "$(tput setaf 2)
+    .~~.   .~~.
+   '. \ ' ' / .'$(tput setaf 1)
+    .~ .~~~..~.    $(tput setaf 7)                   _                          _ $(tput setaf 1)
+   : .~.'~'.~. :   $(tput setaf 7)   ___ ___ ___ ___| |_ ___ ___ ___ _ _    ___|_|$(tput setaf 1)
+  ~ (   ) (   ) ~  $(tput setaf 7)  |  _| .'|_ -| . | . | -_|  _|  _| | |  | . | |$(tput setaf 1)
+ ( : '~'.~.'~' : ) $(tput setaf 7)  |_| |__,|___|  _|___|___|_| |_| |_  |  |  _|_|$(tput setaf 1)
+  ~ .~ (   ) ~. ~  $(tput setaf 7)              |_|                 |___|  |_|    $(tput setaf 1)
+   (  : '~' :  )
+    '~ .~~~. ~'
+        '~'
+
+$(tput setaf 153)
+`date +"%A %d %B %Y  %T %Z"`
+${HOSTNAME} running `uname -srmo`$(tput setaf 1)
+
+Uptime.............: ${UPTIME}
+Memory.............: `cat /proc/meminfo | grep MemFree | awk {'print $2'}`kB (Free) / `cat /proc/meminfo | grep MemTotal | awk {'print $2'}`kB (Total)
+Load Averages......: ${one}, ${five}, ${fifteen} (1, 5, 15 min)
+CPU Temperature....: `vcgencmd measure_temp | sed -nr 's/(.*=)([0-9]+.[0-9]).*/\2°C/p'`
+Users / Processes..: `who | wc -l`  |  `ps ax | wc -l | tr -d " "`
+IP Addresses.......: `/sbin/ifconfig wlan0 | /bin/grep "inet addr" | /usr/bin/cut -d ":" -f 2 | /usr/bin/cut -d " " -f 1` and `wget -q -O - http://icanhazip.com/ | tail`
+MAC Address........: `ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`
+
+Melbourne Weather..: $(tput setaf 5)`curl -s "http://rss.accuweather.com/rss/liveweather_rss.asp?metric=1&locCode=OCN|AU|VIC|MELBOURNE|" | sed -n '/Currently:/ s/.*: \(.*\): \([0-9]*\)\([CF]\).*/\2°\3, \1/p'`
+$(tput sgr0)
+"
